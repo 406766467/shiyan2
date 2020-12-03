@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	</head>
+	<body>
+		 <!-- 增加用户 -->
+		<div id="app">
+			姓名：<input type="text" name="aname" v-model="aname" id="aname"  />
+			年龄：<input type="text" name="aage"  v-model="aage"  id="aage" />
+			性别：
+			您选择了：<select name="cityName" v-model="choosesex">
+				<option v-for="sex in sexs" :value="sex" >{{sex}}</option>
+			</select>
+			您选择了：<span style="color: red;">{{choosesex}} </span>
+			<button type="button" @click="insertUser">添加</button>
+			<p style="color: red;">{{state}}</p>
+		</div>
+		
+		<script type="text/javascript">
+			let app = new Vue({
+				el:"#app",
+				data:{
+					aname:"张復华",
+					aage:"20",
+					asex:"男",
+					state:"",
+					choosesex:"男",
+					chooseCitys:[],
+					sexs:["男","女"]
+				},
+				methods:{
+					insertUser:function(){
+				    if(app.aname == "" || app.aage == "" || app.asex == ""){
+						alert("输入不能为空！");
+						return;
+					}
+
+						axios.post('http://localhost:8080/api/v1/shiyan2/insertUser',{
+							name: app.aname,
+							age: app.aage,
+							sex: app.choosesex
+						})
+						.then(function (response) {
+							app1.users = []
+							console.log("response.data[0].length" + response.data.length)
+								  if(response.data.length > 1){
+										  for (items of response.data){
+											   console.log("返回json数据：" + items)
+											   app1.users.push(items)
+										   }
+									  }else{
+										  app.state = response.data
+									  }
+								  
+							  })
+						      .catch(function (error) { // 请求失败处理
+						        console.log(error);
+						      });
+					}
+				},
+				watch:{
+					aname:function(){
+						console.log(this.aname)
+					}
+				}
+			})
+		</script>
+		
+		
+		<!-- 查询全部或者根据ID查询 -->
+		
+		<div id="app1">
+			请输入ID ：<input type="text" name="selectID" id="selectID" v-model="selectid" />
+			<table border="" cellspacing="" cellpadding="">
+				<tr>
+					<th>ID</th>
+					<th>姓名</th>
+					<th>年龄</th>
+					<th>性别</th>
+					<th>删除</th>
+					<th>修改</th>
+				</tr>
+				<tr v-for="user in users">
+					<!-- <td v-for="value,key in user">{{key}} --- {{value}}</td> -->
+					<td>{{user.id}}</td>
+					<td>{{user.name}}</td>
+					<td>{{user.age}}</td>
+					<td>{{user.sex}}</td>
+					<td><button type="button" @click="deleteUser(user.id)">删除</button></td>
+					<td><button type="button" @click="updateUser(user)">修改</button></td>
+				</tr>
+			</table>
+<!-- 			
+			<ul v-for="user in users">
+				<li v-for="value,key in user">{{key}} --- {{value}}</li>
+			</ul> -->
+			<button type="button" @click="find">查询用户信息</button> <br>
+			<input type="hidden" v-model="uid"   />
+			请输入姓名 ：<input type="text"   v-model="uname" /> <br>
+			请输入年龄 ：<input type="text"   v-model="uage" /> <br>
+			请输入性别 ：<input type="text"   v-model="usex" /> <br>
+			<button type="button" @click="updateUser111">修改</button> <br>
+		</div>
+		
+		<script type="text/javascript">
+			let app1 = new Vue({
+				el:"#app1",
+				data:{
+					users:[],
+					selectid:'20184172',
+					uid:"",
+					uname:"",
+					uage:"",
+					usex:""
+				},
+				methods:{
+					// find:async function(){
+					// 	let httpCityId = `http://localhost:8080/api/v1/shiyan2/showUser`
+					// 	let idRes = await fetch(httpCityId)
+					// 	let idResult = await idRes.json()
+						
+					// 	// 要用of不用in
+					// 	for (items of idResult){
+					// 		console.log("返回json数据：" + items)
+					// 		this.users.push(items)
+					// 	}
+					// 	// let id = idResult
+					// }
+					find:function(){
+
+					 axios.get('http://localhost:8080/api/v1/shiyan2/selectUserById', {
+					     params: {
+					       id: app1.selectid
+					     }
+					   })
+					   .then(function (response) {
+						   app1.users = []
+						   console.log(response.data.length )
+						   if(response.data.length > 1){
+							   for (items of response.data){
+						   		   console.log("返回json数据：" + items)
+						   		   app1.users.push(items)
+						    	}
+						   }else{
+							   app1.users.push(response.data)
+						   }
+						   
+					   })
+					   .catch(function (error) {
+					     console.log(error);
+					   });
+ 
+					},
+					
+					deleteUser:function(ids){
+						console.log(ids)
+						axios.post('http://localhost:8080/api/v1/shiyan2/deleteUserById',{
+							id: ids,
+						})
+						.then(function (response) {
+							 app1.users = []
+								  if(response.data.length > 1){
+										  for (items of response.data){
+											   console.log("返回json数据：" + items)
+											   app1.users.push(items)
+										   }
+									  }else{
+										  app.state = response.data
+									  }
+								  
+							  })
+						      .catch(function (error) { // 请求失败处理
+						        console.log(error);
+						      });
+					},
+					updateUser:function(user){
+						console.log(user)
+						this.uid = user.id
+						this.uname = user.name
+						this.uage = user.age
+						this.usex = user.sex
+					},
+					updateUser111:function(){
+						axios.post('http://localhost:8080/api/v1/shiyan2/updateUserById',{
+							id: app1.uid,
+							name: app1.uname,
+							age: app1.uage,
+							sex: app1.usex
+						})
+						.then(function (response) {
+							app1.users = []
+							console.log("response.data[0].length" + response.data.length)
+								  if(response.data.length > 1){
+										  for (items of response.data){
+											   console.log("返回json数据：" + items)
+											   app1.users.push(items)
+										   }
+									  }else{
+										  app.state = response.data
+									  }
+							  })
+						      .catch(function (error) { // 请求失败处理
+						        console.log(error);
+						      });
+					}
+			
+				} 
+			})
+		</script>
+	</body>
+</html>
